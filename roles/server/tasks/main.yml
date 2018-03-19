@@ -1,0 +1,194 @@
+---
+- name: install python 2
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+
+- name: Gather OS-specific variables
+  include_vars: "{{ ansible_distribution }}.yml"
+  tags: always
+
+- name: update and upgrade all to latest version
+  apt:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400 #One day  
+  when: ansible_distribution == "Ubuntu"
+
+- name: update and upgrade all to latest version
+  yum:
+    upgrade: yes
+    update_cache: yes
+    cache_valid_time: 86400 #One day  
+  when: ansible_distribution == "CentOS"   
+  
+
+- name: Download Server source code 
+  get_url:
+    url: http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/{{ GUACAMOLE_VERSION }}/source/guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz
+    dest: /home/{{ansible_user}}
+    
+   
+
+- name: Extract the guacamole-server source
+  unarchive: src="guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz" copy=no dest=/home/{{ansible_user}}
+  tags: extract
+
+- tags: install
+  block:
+  - name: Add Oracle Java repository
+    apt_repository: repo="ppa:webupd8team/java"
+    when: ansible_distribution == "Ubuntu"
+  
+  - name: Install epel-release for CentOS
+    yum: name=epel-release state=latest update_cache=yes
+    when: ansible_distribution == "CentOS"
+    
+  - name: Agree to oracle license
+    debconf: name=oracle-java8-installer question=shared/accepted-oracle-license-v1-1 vtype=select value=true
+    
+  - name: Install dependencies for guacamole
+    package: name={{ item }} state=latest
+    with_items: '{{ PACKAGES }}'
+    
+  - name: Build guacamole-server from source
+    shell: '{{ item }}'
+    args:
+      chdir: guacamole-server-{{ GUACAMOLE_VERSION }}
+      creates: /usr/local/sbin/guacd
+    with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
+  - name: Run ldconfig so that guacd can run correctly
+    shell: ldconfig
+  - name: auto start guacd
+    command: update-rc.d guacd defaults
+
+
+- name: Download client war file 
+  get_url:
+    url: http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/{{ GUACAMOLE_VERSION }}/binary/guacamole-{{ GUACAMOLE_VERSION }}.war
+    dest: /var/lib/{{ TOMCAT_NAME }}/webapps/guacamole.war
+    mode: 0755
+    
+#- name: Copy over guacamole-{{ GUACAMOLE_VERSION }}.war
+#  copy: src="files/guacamole-{{ GUACAMOLE_VERSION }}.war" dest=/var/lib/{{ TOMCAT_NAME }}/webapps/guacamole.war
+#  tags: file
+
+- name: Make '{{ GUACAMOLE_HOME }}' directory
+  file: path='{{ GUACAMOLE_HOME }}' state=directory
+  tags: configuration
+#- name: MAKE /etc/guacamole directory
+#  file: path=/etc/guacamole state=directory
+  
+- name: Make a link to /etc/guacamole
+  file:
+    src: '{{ GUACAMOLE_HOME }}'
+    dest: /etc/guacamole
+    state: link
+    force: yes
+    follow: true
+ 
+
+  
+- tags: database
+  block:
+ 
+  - name: Install the Python MySQLB module
+    pip:
+     name: "{{ item }}"
+     state: forcereinstall
+    with_items: 
+       - mysql-connector
+       - MySQL-python
+     
+    
+ 
+  - name: Start/Restart MySQL
+    service: name={{ MYSQL_DAEMON }} state=restarted
+    
+  - name: Copy over guacamole-auth source
+    get_url:
+      url: http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/{{ GUACAMOLE_VERSION }}/binary/guacamole-auth-jdbc-{{ GUACAMOLE_VERSION }}.tar.gz
+      dest: /home/{{ansible_user}}
+
+  - name: Extract guacamole-auth
+    unarchive: src="guacamole-auth-jdbc-{{ GUACAMOLE_VERSION }}.tar.gz" copy=no dest=/home/{{ansible_user}}
+    
+  - name: Create database
+    mysql_db: name={{ database_name }} state=present
+  - name: Create MySQL guacamole user
+  
+    mysql_user: name={{ database_user }} password={{ database_passwd }} state=present priv={{ database_name }}.*:ALL
+  - name: Run schema on {{ database_name }}
+    shell: cat schema/*.sql | {{ database_cmd }} chdir="guacamole-auth-jdbc-{{ GUACAMOLE_VERSION }}/mysql/"
+    ignore_errors: true
+    
+  #- name: Make connection names unique
+  #  shell: echo "ALTER TABLE guacamole_connection ADD UNIQUE (connection_name);" | {{ database_cmd }}
+  # - name: Change guacadmin password to a randomly generated string
+  #   shell: echo "SET @salt = UNHEX(SHA2(UUID(), 256)); UPDATE guacamole_user SET password_salt=@salt and password_hash=UNHEX(SHA2(CONCAT('UNHEX(SHA2(UUID(), 256))', HEX(@salt)), 256)) where username='guacadmin';" | {{ database_cmd }}
+  - name: Create {{ GUACAMOLE_HOME }}/extensions directory
+    file: path="{{ GUACAMOLE_HOME }}/extensions" state=directory
+    
+  - name: Copy over guacamole-auth-jdbc-mysql-{{ GUACAMOLE_CLIENT_VERSION }}.jar to {{ GUACAMOLE_HOME }}/extensions
+    copy: src="guacamole-auth-jdbc-{{ GUACAMOLE_CLIENT_VERSION }}/mysql/guacamole-auth-jdbc-mysql-{{ GUACAMOLE_VERSION }}.jar" remote_src=True dest="{{ GUACAMOLE_HOME }}/extensions"
+
+  - name: Create {{ GUACAMOLE_HOME }}/lib directory
+    file: path="{{ GUACAMOLE_HOME }}/lib" state=directory
+   
+   
+    
+  - name: get mysql-connector-java--bin.tar.gz 
+    get_url:
+      url: https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}.tar.gz
+      dest: /home/{{ansible_user}}
+      
+  - name: Extract mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}.tar.gz
+    unarchive: 
+      src: mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}.tar.gz
+      copy: no 
+      dest: /home/{{ansible_user}}
+  - name: copy mysql-connector-java-{{MYSQL_CONNECTOR_VERSION }}-bin.jar to {{ GUACAMOLE_HOME }} /lib
+    copy:
+       src: "mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}/mysql-connector-java-{{MYSQL_CONNECTOR_VERSION }}-bin.jar"
+       dest: "{{ GUACAMOLE_HOME }}/lib"
+       remote_src: true
+       mode: 0755
+ 
+       
+  - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
+    template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
+    tags: template
+  - name: Add logback.xml.j2 to "{{ GUACAMOLE_HOME }}"
+    template: src="logback.xml.j2" dest="{{ GUACAMOLE_HOME }}/logback.xml"
+    tags: template
+   
+  - name: install ldap extention
+    tags: ldap
+    get_url:
+      url: http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/{{ GUACAMOLE_VERSION }}/binary/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
+      dest: /home/{{ansible_user}}
+  - name: Extract mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}.tar.gz
+    tags: ldap
+    unarchive: 
+      src: uacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
+      copy: no 
+      dest: "{{ GUACAMOLE_HOME }}/extensions"
+      mode: 0755
+      
+  - name: Cleanup temp files
+    file: path={{ item }} state=absent
+    with_items:
+      - guacamole-auth-jdbc-{ GUACAMOLE_VERSION }}.tar.gz
+      - guacamole-auth-jdbc-{ GUACAMOLE_VERSION }}
+      - guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz
+      - guacamole-server-{{ GUACAMOLE_VERSION }}
+    ignore_errors: yes
+    tags: cleanup
+
+
+ 
+      
+
+  - name: restart services (tomcat,mysql,guacd, {{ MYSQL_DAEMON }})
+    service: name={{ item }} state=restarted
+    with_items: [ '{{ MYSQL_DAEMON }}','{{ TOMCAT_NAME }}', guacd ]
+    ignore_errors: yes
+    tags: restart

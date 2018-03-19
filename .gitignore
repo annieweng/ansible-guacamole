@@ -1,0 +1,7 @@
+.vault_pass
+*.egg-info
+.pydevproject
+.project
+private
+provision.retry
+guacamole.properties_*.j2

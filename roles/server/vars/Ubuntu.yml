@@ -1,0 +1,39 @@
+---
+
+TOMCAT_NAME: tomcat8
+MYSQL_DAEMON: mysql
+PACKAGES:
+  - python
+  - apache2
+  - libcairo2-dev
+  - libjpeg-dev
+  - libjpeg8-dev
+  - libjpeg-turbo8-dev
+  - libpng12-dev
+  - libossp-uuid-dev
+  - libguac-dev
+  - "tomcat{{ TOMCAT_VERSION }}"
+  - "tomcat{{ TOMCAT_VERSION }}-common"
+  - libtomcat{{ TOMCAT_VERSION }}-java
+  - python-software-properties
+  - software-properties-common
+  - oracle-java8-installer
+  - python-psycopg2
+  - mysql-server
+  - libmysqlclient-dev
+  - libpq-dev
+  - python-pip
+  - python-dev
+  - python-mysqldb
+  # Optionals:
+  - libfreerdp-dev
+  - libpango1.0-dev
+  - libssh2-1-dev
+  - libtelnet-dev
+  - libvncserver-dev
+  - libpulse-dev
+  - libssl-dev
+  - libvorbis-dev
+  - libwebp-dev
+
+

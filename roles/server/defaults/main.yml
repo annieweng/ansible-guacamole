@@ -1,0 +1,25 @@
+---
+
+GUACD_PORT: 4822
+GUACAMOLE_HOME: /usr/share/{{ TOMCAT_NAME }}/.guacamole
+GUACAMOLE_VERSION: 0.9.14
+GUACAMOLE_CLIENT_VERSION: 0.9.14
+
+TOMCAT_VERSION: 8
+LOG_LEVEL: debug
+database_user: guacuser 
+database_name: guac
+database_passwd: {{ vault_database_passwd }}
+database_cmd: mysql --user={{ database_user }} --password={{ database_passwd }} {{ database_name }}
+MYSQL_CONNECTOR_VERSION: 5.1.46
+ldap-search-bind-password: {{ vault_ldap-search-bind-password }}
+
+
+
+#customization for internal project
+#default webapp link is localhost:8080/guacamole, change it to /desktop
+#WEBAPP_LINK: "desktop"
+#change app name in web client UI to specific url
+#APP_NAME: "Hive Desktop"
+
+ 

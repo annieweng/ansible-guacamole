@@ -1,0 +1,28 @@
+---
+
+TOMCAT_NAME: tomcat
+MYSQL_DAEMON: mysqld
+PACKAGES:
+  - cairo-devel
+  - libjpeg-devel
+  - libjpeg-turbo-devel
+  - libpng-devel
+  - libpng
+  - uuid-devel
+  - {{ TOMCAT_NAME }}
+  - java-1.8.0-openjdk.x86_64
+  - python-devel
+  - mysql-devel
+  - libmysqlclient-devel
+  - MySQL-python.x86_64
+  - mysql-server
+  # Optionals:
+  - freerdp-devel
+  - pango-devel
+  - libssh2-devel
+  - libtelnet-devel
+  - libvncserver-devel
+  - pulseaudio-libs-devel
+  - openssl-devel
+  - libvorbis-devel
+  - libwebp-devel
