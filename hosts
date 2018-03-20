@@ -14,7 +14,7 @@
 #localhost ansible_connection=local
 
 [guac-server]
-10.108.16.81
+10.108.16.159
 
 #default to python, since db_create doesn't support python3 yet
 [all:vars]

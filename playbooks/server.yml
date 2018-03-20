@@ -1,7 +1,0 @@
----
-
-- name: Playbook to install Guacamole HTML5 VNC on a server
-  hosts: guac-server
-  remote_user: ubuntu
-  roles:
-    - roles/server

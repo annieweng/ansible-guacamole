@@ -9,12 +9,17 @@ TOMCAT_VERSION: 8
 LOG_LEVEL: debug
 database_user: guacuser 
 database_name: guac
-database_passwd: {{ vault_database_passwd }}
+database_passwd: "{{ vault_database_passwd }}"
 database_cmd: mysql --user={{ database_user }} --password={{ database_passwd }} {{ database_name }}
 MYSQL_CONNECTOR_VERSION: 5.1.46
-ldap-search-bind-password: {{ vault_ldap-search-bind-password }}
 
+#LDAP configuration. most are set in vault.yml
 
+ldap_hostname: "{{ vault_ldap_hostname }}"
+ldap_user_base_dn: "{{ vault_ldap_user_base_dn }}"
+ldap_search_bind_dn: "{{ vault_ldap_search_bind_dn }}"
+ldap_search_bind_password: "{{ vault_ldap_search_bind_password }}"
+ldap_user_search_filter: "{{ vault_ldap_user_search_filter }}"
 
 #customization for internal project
 #default webapp link is localhost:8080/guacamole, change it to /desktop

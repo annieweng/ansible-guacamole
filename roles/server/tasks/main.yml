@@ -1,6 +1,4 @@
 ---
-- name: install python 2
-  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
 
 - name: Gather OS-specific variables
   include_vars: "{{ ansible_distribution }}.yml"
@@ -165,14 +163,21 @@
     get_url:
       url: http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/{{ GUACAMOLE_VERSION }}/binary/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
       dest: /home/{{ansible_user}}
-  - name: Extract mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}.tar.gz
+      
+  - name: Extract guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
     tags: ldap
     unarchive: 
-      src: uacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
-      copy: no 
-      dest: "{{ GUACAMOLE_HOME }}/extensions"
+      src: guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
+      copy: no
+      dest: /home/{{ansible_user}}
       mode: 0755
-      
+  - name: copy guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.jar to {{ GUACAMOLE_HOME }}/extensions
+    tags: ldap
+    copy:
+       src: "guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.jar"
+       dest: "{{ GUACAMOLE_HOME }}/extensions"
+       remote_src: true
+       mode: 0755      
   - name: Cleanup temp files
     file: path={{ item }} state=absent
     with_items:

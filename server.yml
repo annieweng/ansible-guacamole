@@ -1,0 +1,15 @@
+---
+
+- name: Playbook to install Guacamole HTML5 VNC on a server
+  hosts: guac-server
+  
+  #install python first, if it's missing. create-db requires python 2.x
+  gather_facts: False
+  pre_tasks:
+    - raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+    - setup: # aka gather_facts
+    
+  remote_user: ubuntu
+  
+  roles:
+    - roles/server

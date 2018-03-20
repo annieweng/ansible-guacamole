@@ -3,5 +3,5 @@
 .pydevproject
 .project
 private
-provision.retry
+*.retry
 guacamole.properties_*.j2

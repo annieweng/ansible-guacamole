@@ -1,0 +1,12 @@
+#following variable should be store using ansible_vault
+#ansible-vault create group_vars/all/vault.yml --vault-password-file=.vault_pass
+# then copy following content to the vault.yml file. and update the value to reflect your system setting.
+#save it. to edit " ansible-vault edit group_vars/all/vault.yml --vault-password-file=.vault_pass "
+#../../../.vault_pass is the password file that is used to encrypt data. 
+
+vault_ldap_hostname: ldaphost
+vault_ldap_user_base_dn: cn=users,cn=accounts,dc=ipa,dc=example,dc=io
+vault_ldap_search_bind_dn:  uid=rouser,cn=users,cn=accounts,dc=ipa,dc=example,dc=io
+vault_ldap_search_bind_password: password!!!! 
+vault_ldap_user_search_filter: (|(memberOf=cn=guac_users,cn=groups,cn=accounts,dc=ipa,dc=example,dc=io))
+vault_database_passwd: dbpassword
