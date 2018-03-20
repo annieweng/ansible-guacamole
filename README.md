@@ -13,12 +13,11 @@ the module configured mysql database to store connection info, and add extension
 
 3. change version desire on default/main.yml file, then 'ansible-play -v playbooks/server.yml',  this will setup guacamole server and client in one machine
 
-Current guacamole version: **0.9.14**
-Current guacamole client version: including war  and extensions: **0.9.14**
-Current tomcat version: **tomcat8** (Ubuntu), **tomcat** (CentOS)
-
-
-GUACAMOLE_HOME is default to `/usr/share/{{ TOMCAT_VERSION }}/.guacamole`, it's also soft link to /etc/guacamole.
+  * Current guacamole version: **0.9.14**  
+  * Current guacamole client version: including war  and extensions: **0.9.14**  
+  * Current tomcat version: **tomcat8** (Ubuntu), **tomcat** (CentOS)  
+  * GUACAMOLE_HOME is default to `/usr/share/{{ TOMCAT_VERSION }}/.guacamole`, it's also soft link to /etc/guacamole.  
+  
 
 4.  navigate to $host:8080/guacamole, login with guacadmin/guacadmin(default mysqldb password), and go to setting/preferences/change password to change password to match the one in ldap.
 navigate to users tab, it should list all users from ldap.
