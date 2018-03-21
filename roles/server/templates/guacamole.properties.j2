@@ -21,16 +21,17 @@ guacd-port:    {{ GUACD_PORT }}
 
 # LDAP setting
 #auth-provider: net.sourceforge.guacamole.net.auth.ldap.LDAPAuthenticationProvider
-ldap-hostname: "{{ ldap_hostname }}"
+ldap-hostname: {{ ldap_hostname }}
 ldap-port: 389
 #ldap-encryption-method: none
 ldap-max-search-results: 500
-ldap-user-base-dn: "{{ ldap_user_base_dn }}"
-ldap-search-bind-dn:  "{{ ldap_search_bind_dn }}"
-ldap-search-bind-password: "{{ ldap_search_bind_password }}"
+ldap-user-base-dn:  {{ ldap_user_base_dn }}
+ldap-search-bind-dn: {{ ldap_search_bind_dn }}
+ldap-search-bind-password: {{ ldap_search_bind_password }}
 ldap-username-attribute: uid
+
 #only allow user that are member of guac-users
-ldap-user-search-filter: "{{ ldap_user_search_filter }}"
+ldap-user-search-filter: {{ ldap_user_search_filter }}
 
 # MySQL Properties
 mysql-hostname: localhost
@@ -38,6 +39,11 @@ mysql-port: 3306
 mysql-database: {{ database_name }}
 mysql-username: {{ database_user }}
 mysql-password: {{ database_passwd }}
+
 #allow concurrent connection.
-mysql-disallow-simultaneous-connections: false
-mysql-disallow-duplicate-connections: false
+mysql-default-max-connections: 0
+mysql-default-max-connections-per-user: 0
+mysql-default-max-group-connections-per-user: 0
+
+
+

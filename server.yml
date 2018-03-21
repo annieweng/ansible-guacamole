@@ -7,8 +7,9 @@
   gather_facts: False
   pre_tasks:
     - raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      tags: always 
     - setup: # aka gather_facts
-    
+      tags: always  
   remote_user: ubuntu
   
   roles:

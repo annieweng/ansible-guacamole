@@ -35,5 +35,6 @@ PACKAGES:
   - libssl-dev
   - libvorbis-dev
   - libwebp-dev
+  - haveged
 
 
