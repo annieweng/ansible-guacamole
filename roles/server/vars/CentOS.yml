@@ -2,6 +2,7 @@
 
 TOMCAT_NAME: tomcat
 MYSQL_DAEMON: mysqld
+
 PACKAGES:
   - cairo-devel
   - libjpeg-devel
@@ -9,11 +10,11 @@ PACKAGES:
   - libpng-devel
   - libpng
   - uuid-devel
-  - {{ TOMCAT_NAME }}
+  - tomcat
   - java-1.8.0-openjdk.x86_64
   - python-devel
   - mysql-devel
-  - libmysqlclient-devel
+  - python-pip
   - MySQL-python.x86_64
   - mysql-server
   # Optionals:
@@ -27,3 +28,5 @@ PACKAGES:
   - libvorbis-devel
   - libwebp-devel
   - haveged
+  - gcc
+  

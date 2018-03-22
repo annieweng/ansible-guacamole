@@ -4,20 +4,17 @@
   include_vars: "{{ ansible_distribution }}.yml"
   tags: always
 
-- name: update and upgrade all to latest version
-  apt:
-    upgrade: yes
-    update_cache: yes
-    cache_valid_time: 86400 #One day  
-  when: ansible_distribution == "Ubuntu"
 
-- name: update and upgrade all to latest version
-  yum:
-    upgrade: yes
-    update_cache: yes
-    cache_valid_time: 86400 #One day  
-  when: ansible_distribution == "CentOS"   
+
   
+#- name: update and upgrade all to latest version
+#  apt:
+#    upgrade: yes
+#    update_cache: yes
+#    cache_valid_time: 86400 #One day  
+#  when: ansible_distribution == "Ubuntu"
+
+
 
 - name: Download Server source code 
   get_url:
@@ -42,6 +39,20 @@
     
   - name: Agree to oracle license
     debconf: name=oracle-java8-installer question=shared/accepted-oracle-license-v1-1 vtype=select value=true
+    when: ansible_distribution == "Ubuntu"
+    
+  - name: Download MySQL Community Repo 
+    get_url:
+      url: http://repo.mysql.com/mysql-community-release-el7-7.noarch.rpm 
+      dest: /tmp
+    when: ansible_distribution == "CentOS"
+
+  
+  - name: Install MySQL Community Repo
+    yum: 
+      name: /tmp/mysql-community-release-el7-7.noarch.rpm
+      state: present
+    when: ansible_distribution == "CentOS"  
     
   - name: Install dependencies for guacamole
     package: name={{ item }} state=latest
@@ -55,25 +66,33 @@
     with_items: [ ./configure --with-init-dir=/etc/init.d, make, make install ]
   - name: Run ldconfig so that guacd can run correctly
     shell: ldconfig
+    
   - name: auto start guacd
     command: update-rc.d guacd defaults
+    when: ansible_distribution == "Ubuntu"
+    
+  - name: auto start guacd
+    command: chkconfig guacd on
+    when: ansible_distribution == "CentOS"
 
 
 - name: Download client war file 
   get_url:
     url: http://apache.org/dyn/closer.cgi?action=download&filename=guacamole/{{ GUACAMOLE_VERSION }}/binary/guacamole-{{ GUACAMOLE_VERSION }}.war
     dest: /var/lib/{{ TOMCAT_NAME }}/webapps/guacamole.war
+    owner: "{{ TOMCAT_NAME }}"
+    group: "{{ TOMCAT_NAME }}"
     mode: 0755
     
-#- name: Copy over guacamole-{{ GUACAMOLE_VERSION }}.war
-#  copy: src="files/guacamole-{{ GUACAMOLE_VERSION }}.war" dest=/var/lib/{{ TOMCAT_NAME }}/webapps/guacamole.war
-#  tags: file
 
 - name: Make '{{ GUACAMOLE_HOME }}' directory
   file: path='{{ GUACAMOLE_HOME }}' state=directory
+        owner={{ TOMCAT_NAME }}
+        group={{ TOMCAT_NAME }}
+        mode=0755
   tags: configuration
-#- name: MAKE /etc/guacamole directory
-#  file: path=/etc/guacamole state=directory
+
+
   
 - name: Make a link to /etc/guacamole
   file:
@@ -82,7 +101,9 @@
     state: link
     force: yes
     follow: true
- 
+    owner: "{{ TOMCAT_NAME }}"
+    group: "{{ TOMCAT_NAME }}"
+    mode: 0755
 
   
 - tags: database
@@ -129,8 +150,8 @@
     copy: src="guacamole-auth-jdbc-{{ GUACAMOLE_CLIENT_VERSION }}/mysql/guacamole-auth-jdbc-mysql-{{ GUACAMOLE_VERSION }}.jar" remote_src=True dest="{{ GUACAMOLE_HOME }}/extensions"
 
   - name: Create {{ GUACAMOLE_HOME }}/lib directory
-    file: path="{{ GUACAMOLE_HOME }}/lib" state=directory
-   
+    file: path="{{ GUACAMOLE_HOME }}/lib" state=directory mode=0755
+         
    
     
   - name: get mysql-connector-java--bin.tar.gz 
@@ -143,6 +164,7 @@
       src: mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}.tar.gz
       copy: no 
       dest: /home/{{ansible_user}}
+      
   - name: copy mysql-connector-java-{{MYSQL_CONNECTOR_VERSION }}-bin.jar to {{ GUACAMOLE_HOME }} /lib
     copy:
        src: "mysql-connector-java-{{ MYSQL_CONNECTOR_VERSION }}/mysql-connector-java-{{MYSQL_CONNECTOR_VERSION }}-bin.jar"
@@ -152,12 +174,17 @@
  
        
   - name: Add guacamole.properties to "{{ GUACAMOLE_HOME }}"
-    template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties"
+    template: src="guacamole.properties.j2" dest="{{ GUACAMOLE_HOME }}/guacamole.properties" 
     tags: deploy
+    
   - name: Add logback.xml.j2 to "{{ GUACAMOLE_HOME }}"
     template: src="logback.xml.j2" dest="{{ GUACAMOLE_HOME }}/logback.xml"
-    tags: template
-   
+    tags: deploy
+    
+  - name: Add user-mapping.xml.j2 to "{{ GUACAMOLE_HOME }}"
+    template: src="user-mapping.xml.j2" dest="{{ GUACAMOLE_HOME }}/user-mapping.xml"
+    tags: deploy   
+    
   - name: install ldap extention
     tags: ldap
     get_url:
@@ -187,17 +214,29 @@
       - /home/{{ansible_user}}/guacamole-auth-jdbc-{ GUACAMOLE_VERSION }}
       - /home/{{ansible_user}}/guacamole-server-{{ GUACAMOLE_VERSION }}.tar.gz
       - /home/{{ansible_user}}/guacamole-server-{{ GUACAMOLE_VERSION }}
-#      - /home/{{ansible_user}}/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
-#      - /home/{{ansible_user}}/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}
+      - /home/{{ansible_user}}/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}.tar.gz
+      - /home/{{ansible_user}}/guacamole-auth-ldap-{{ GUACAMOLE_VERSION }}
     ignore_errors: yes
     tags: cleanup
-
-
+    
+  - name: set permission and owners
+    tags: deploy
+    file:
+      path: "{{ GUACAMOLE_HOME }}"
+      state: directory
+      mode: 0755
+      recurse: yes
+      owner: "{{ TOMCAT_NAME }}"
+      group: "{{ TOMCAT_NAME }}"
  
       
-
-  - name: restart services (tomcat,mysql, guacd, {{ MYSQL_DAEMON }})
+  - name: Disable SELinux 
+    selinux:
+     state: disabled
+    when: ansible_distribution == "CentOS"
+    
+  - name: restart services ({{ TOMCAT_NAME }},  {{ MYSQL_DAEMON }}, guacd)
     service: name={{ item }} state=restarted
-    with_items: [ '{{ MYSQL_DAEMON }}','{{ TOMCAT_NAME }}', guacd ]
+    with_items: [ '{{ MYSQL_DAEMON }}', guacd, '{{ TOMCAT_NAME }}']
     ignore_errors: yes
     tags: deploy

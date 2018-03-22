@@ -2,6 +2,7 @@
 
 TOMCAT_NAME: tomcat8
 MYSQL_DAEMON: mysql
+
 PACKAGES:
   - python
   - apache2
