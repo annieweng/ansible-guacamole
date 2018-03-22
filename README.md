@@ -15,7 +15,7 @@ The module configured mysql database to store connection info, and add extension
    * take a note of password for the guacadmin user. you will NEED to have same password in mysql database for the application to see all users in ldap that match criteria.
    
    
-## installation/Configuration
+## Installation/Configuration
 
 1.  we use ansible-vault to store sensitive information, ie database password, ldap bind info. to create your own vault.xml: 
    * create a .vault_pass file and enter your pass phrase in the file. 
