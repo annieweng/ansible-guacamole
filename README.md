@@ -9,7 +9,7 @@ The module configured mysql database to store connection info, and add extension
   * OS: Ubuntu 16.04 and Centos 7
   * should work with earlier version, not tested.
 ## Assumption:
-   * you have a working ldap server. the configuration in guacamole.properties is tailor to freeipa ldap server.
+   * you have a working ldap server. 
    * you have create a guacadmin user in your ldap server.
    * if you are using "ldap-user-search-filter", make sure guacadmin user is also a member of user group that you would be filtering. this is needed in order for guacamole to see all users in ldap.
    * take a note of password for the guacadmin user. you will NEED to have same password in mysql database for the application to see all users in ldap that match criteria.
@@ -22,6 +22,7 @@ The module configured mysql database to store connection info, and add extension
      this file is added in .gitignore, therefore will not be checking into git repo. 
    * ansible-vault create group_vars/all/vault.yml --vault-password-file=.vault_pass
    and fill in all vault value. see roles/server/var/vault.xml.template as example
+   * use ansible-playbook --ask-vault-pass if prefer. just update ansible.cfg to reflect the option.
    
 2. change value on group_var/all/vars.yml file to your own environment, then 'ansible-play -v playbooks/server.yml',  this will setup guacamole server and client in one machine
 
