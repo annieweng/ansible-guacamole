@@ -24,7 +24,7 @@ The module configured mysql database to store connection info, and add extension
    and fill in all vault value. see roles/server/var/vault.xml.template as example
    * use ansible-playbook --ask-vault-pass if prefer. just update ansible.cfg to reflect the option.
    
-2. change value on group_var/all/vars.yml file to your own environment, then 'ansible-play -v playbooks/server.yml',  this will setup guacamole server and client in one machine
+2. change value on group_var/all/vars.yml file to your own environment, then 'ansible-playbook -v server.yml',  this will setup guacamole server and client in one machine
 
   * Current guacamole version: **0.9.14**  
   * Current guacamole client version: including war  and extensions: **0.9.14**  
